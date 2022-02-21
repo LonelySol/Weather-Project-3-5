@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Document</title>
+    <h1>天気予報</h1>
+    <div id="link">
+        <a href="/">詳細</a> | <a href="/logs">地図</a>
+    </div>
+    <h2>現在の天気</h2>
+    <div id="client-city">
+        <p>
+            場所 <span id='city-name'></span><br>
+            天気 <span id='weather-desc'></span><br>
+            気温 <span id='temp'></span>°C<br>
+            体感温度 <span id='temp-feelslike'></span>°C<br>
+            風速 <span id='wind-speed'></span>m/s<br>
+        </p>
+    </div>
+    <h3>他の都市天気を検索</h3>
+    <div class="relative">
+        <input id='input-city' value="city name" />
+        <button id='search'>search</button>
+    </div>
+    <div id="searched-city">
+        <p>
+            場所 <span id='searched-city-name'></span><br>
+            天気 <span id='searched-weather-desc'></span><br>
+            気温 <span id='searched-temp'></span>°C<br>
+            体感温度 <span id='searched-temp-feelslike'></span>°C<br>
+            風速 <span id='searched-wind-speed'></span>m/s<br>
+        </p>
+    </div>
+</head>
+
+<body>
+    <script>
+        const button = document.getElementById('search');
+
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(async position => {
+                lat = position.coords.latitude;
+                lon = position.coords.longitude;
+                console.log('geolocation available');
+                const data = { lat, lon };
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                };
+
+                //get API data using lat, lon
+                const url_api_latlon = `weather/${lat},${lon}`;
+                const weather_response = await fetch(url_api_latlon);
+                const weather_json = await weather_response.json();
+                //console.log(weather_json);
+
+                //write the API data on webpage
+                document.getElementById('weather-desc').textContent = weather_json.weather[0].description;
+                document.getElementById('temp').textContent = weather_json.main.temp;
+                document.getElementById('temp-feelslike').textContent = weather_json.main.feels_like;
+                document.getElementById('city-name').textContent = weather_json.name;
+                document.getElementById('wind-speed').textContent = weather_json.wind.speed;
+                //console.log(weather_json.weather.main);
+
+                //send data to server, so it can be stored in databasse
+                const db_response = await fetch('/client', options);
+                const db_json = await db_response.json();
+                //console.log(db_json);
+            });
+        } else {
+            console.log('geolocation not available');
+        }
+
+        button.addEventListener('click', async event => {
+            //get API data using input_city
+            input_city = document.getElementById('input-city').value;
+            const url_api_city = `city-weather/${input_city}`;
+            const city_weather_response = await fetch(url_api_city);
+            const city_weather_json = await city_weather_response.json();
+            //console.log(input_city);
+
+            //write the API data on webpage
+            document.getElementById('searched-weather-desc').textContent = city_weather_json.weather[0].description;
+            document.getElementById('searched-temp').textContent = city_weather_json.main.temp;
+            document.getElementById('searched-temp-feelslike').textContent = city_weather_json.main.feels_like;
+            document.getElementById('searched-city-name').textContent = city_weather_json.name;
+            document.getElementById('searched-wind-speed').textContent = city_weather_json.wind.speed;
+            //console.log(city_weather_json);
+        });
+    </script>
+</body>
+
+</html>
