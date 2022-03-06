@@ -3,11 +3,12 @@ const fetch = require('node-fetch');
 const Datastore = require('nedb');
 const { request, response } = require('express');
 const database = new Datastore('public/logs/database.db');
+const port = process.env.PORT || 3000
 database.loadDatabase();
 require('dotenv').config({path: '.env'});
 
 const app = express();
-app.listen(3000, () => console.log('Listening at port 3000'));
+app.listen(port, () => console.log('Listening at port 3000'));
 app.use(express.static('public'));
 app.use(express.json({limit: '1mb'}));
 
